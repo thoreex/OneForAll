@@ -3,6 +3,7 @@
 ## Title: One For All
 ## Author: Thoreex
 ## SavedVariables: OneForAll_Database
+## X-Curse-Project-ID: 818963
 
 Libs\embeds.xml
 OneForAll.lua
