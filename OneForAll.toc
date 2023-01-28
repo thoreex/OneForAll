@@ -1,0 +1,8 @@
+## Interface: 30401
+## Version: 1.0.0
+## Title: One For All
+## Author: Thoreex
+## SavedVariables: OneForAll_Database
+
+Libs\embeds.xml
+OneForAll.lua
