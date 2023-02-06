@@ -1,9 +1,10 @@
 ## Interface: 30401
-## Version: 1.0.0
+## Version: 1.1.0
 ## Title: One For All
 ## Author: Thoreex
 ## SavedVariables: OneForAll_Database
+## OptionalDeps: CallbackHandler-1.0, LibDataBroker-1.1, LibDBIcon-1.0, LibStub
 ## X-Curse-Project-ID: 818963
 
-Libs\embeds.xml
+embeds.xml
 OneForAll.lua
