@@ -1,4 +1,4 @@
-## Interface: 30403
+## Interface: 11404
 ## Version: 1.2.0
 ## Title: One For All
 ## Author: Thoreex
