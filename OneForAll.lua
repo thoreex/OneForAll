@@ -291,7 +291,12 @@ function OneForAll_GetButtonExcludedPosition(button1_name)
 end
 
 function OneForAll_IsObjectAButton(object)
-    return object:IsObjectType("button")
+    return object:IsObjectType("button") and
+        object:GetScript("OnDragStart") ~= nil and
+        object:GetScript("OnDragStop") ~= nil and
+        object:GetScript("OnEnter") ~= nil and
+        object:GetScript("OnLeave") ~= nil and
+        object:GetScript("OnClick") ~= nil
 end
 
 function OneForAll_ScanLibraryButtons()
