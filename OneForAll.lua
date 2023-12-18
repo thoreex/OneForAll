@@ -1,6 +1,6 @@
 OneForAll_Name = "OneForAll"
 OneForAll_FormalName = "One For All"
-OneForAll_Version = "v1.2.0"
+OneForAll_Version = "v1.2.1"
 OneForAll_ButtonPrefix = "LibDBIcon10_"
 OneForAll_Events = {}
 OneForAll_Callbacks = {}
