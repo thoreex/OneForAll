@@ -1,5 +1,5 @@
 ## Interface: 30403
-## Version: 1.2.0
+## Version: 1.2.1
 ## Title: One For All
 ## Author: Thoreex
 ## SavedVariables: OneForAll_Database
