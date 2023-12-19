@@ -4,6 +4,7 @@ OneForAll_Version = "v1.2.1"
 OneForAll_ButtonPrefix = "LibDBIcon10_"
 OneForAll_Events = {}
 OneForAll_Callbacks = {}
+OneForAll_Scanned = {}
 OneForAll_Included = {}
 OneForAll_Excluded = {}
 OneForAll_Ignored = {
@@ -42,24 +43,7 @@ function OneForAll_OnCallback(callback, ...)
 end
 
 function OneForAll_OnClick(self, button)
-    OneForAll_IsShown = not OneForAll_IsShown
-
-    for _, button_name in ipairs(OneForAll_Included) do
-        local button = _G[button_name]
-        if (OneForAll_IsShown) then
-            (function()
-                if (not button.HiddenVisibility) then return end
-                button:HiddenShow()
-            end)()
-        else
-            (function()
-                if (not button.HiddenVisibility) then return end
-                button:HiddenHide()
-            end)()
-        end
-    end
-
-    -- Reposition buttons
+    OneForAll_ToggleButtons()
     OneForAll_PositionButtons()
 end
 
@@ -82,6 +66,8 @@ function OneForAll_IncludeButton(button)
     if (button_position > 0) then
         tremove(OneForAll_Excluded, button_position)
     end
+
+    OneForAll_SortButtons()
 
     -- Hide original functionality
     button.HiddenVisibility = button:IsVisible()
@@ -128,13 +114,15 @@ function OneForAll_IncludeButton(button)
             local r = button:GetWidth() / 2
             local scale = button:GetEffectiveScale()
             x, y = (x - r) / scale, (y - r) / scale
-            button:HiddenClearAllPoints()
             button:HiddenSetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x, y)
         end)
     end)
     button:SetScript("OnDragStop", function(button)
         button:SetScript("OnUpdate", nil)
         if OneForAll_IsCursorColliding(OneForAll_MinimapIcon) then
+            if (not OneForAll_IsShown) then
+                OneForAll_ToggleButtons()
+            end
             OneForAll_ExcludeButton(button)
         end
         OneForAll_PositionButtons()
@@ -158,6 +146,8 @@ function OneForAll_ExcludeButton(button)
     if (button_position > 0) then
         tremove(OneForAll_Included, button_position)
     end
+
+    OneForAll_SortButtons()
 
     -- Restore original functionality
     button.Show = button.HiddenShow
@@ -194,6 +184,7 @@ function OneForAll_ExcludeButton(button)
     button.HiddenOnDragStart = nil
     button.HiddenOnDragStop = nil
 
+    -- Show the button
     if (not OneForAll_IsShown) then
         button:Show()
     end
@@ -209,17 +200,40 @@ function OneForAll_SetupDragAndDropButton(button)
     end)
     button:HookScript("OnDragStop", function(button)
         if OneForAll_IsCursorColliding(OneForAll_MinimapIcon) then
+            if (not OneForAll_IsShown) then
+                OneForAll_ToggleButtons()
+            end
             OneForAll_IncludeButton(button)
-            OneForAll_PositionButtons()
         end
+        OneForAll_PositionButtons()
+    end)
+end
+
+function OneForAll_ToggleButtons()
+    OneForAll_IsShown = not OneForAll_IsShown
+    for _, button_name in ipairs(OneForAll_Included) do
+        local button = _G[button_name]
+        if (OneForAll_IsShown) then
+            (function()
+                if (not button.HiddenVisibility) then return end
+                button:HiddenShow()
+            end)()
+        else
+            (function()
+                if (not button.HiddenVisibility) then return end
+                button:HiddenHide()
+            end)()
+        end
+    end
+end
+
+function OneForAll_SortButtons()
+    table.sort(OneForAll_Included, function(button1_name, button2_name)
+        return button1_name:upper() < button2_name:upper()
     end)
 end
 
 function OneForAll_PositionButtons()
-    table.sort(OneForAll_Included, function(button1_name, button2_name)
-        return button1_name:upper() < button2_name:upper()
-    end)
-
     local count = 0
     for _, button_name in ipairs(OneForAll_Included) do
         (function()
@@ -243,6 +257,15 @@ function OneForAll_IsCursorColliding(button)
 
     return (x >= button:GetLeft() and x <= button:GetRight()
         and y >= button:GetBottom() and y <= button:GetTop())
+end
+
+function OneForAll_IsButtonScanned(button1_name)
+    for _, button2_name in ipairs(OneForAll_Scanned) do
+        if(button1_name == button2_name) then
+            return true
+        end
+    end
+    return false
 end
 
 function OneForAll_IsButtonIncluded(button1_name)
@@ -304,8 +327,9 @@ function OneForAll_ScanLibraryButtons()
     for _, name in ipairs(buttons) do
         local button = OneForAll_LibDBIcon:GetMinimapButton(name)
         local button_name = OneForAll_ButtonPrefix..name
-        if(not OneForAll_IsButtonIncluded(button_name) and
+        if(not OneForAll_IsButtonScanned(button_name) and
             not OneForAll_IsButtonIgnored(button_name)) then
+            tinsert(OneForAll_Scanned, button_name)
             OneForAll_SetupDragAndDropButton(button)
             if (not OneForAll_IsButtonExcluded(button_name)) then
                 OneForAll_IncludeButton(button)
@@ -318,9 +342,10 @@ function OneForAll_ScanNonLibraryButtons()
     local children = { Minimap:GetChildren() }
     for _, child in ipairs(children) do
         local child_name = child:GetName()
-        if(not OneForAll_IsButtonIncluded(child_name) and
+        if(not OneForAll_IsButtonScanned(child_name) and
             not OneForAll_IsButtonIgnored(child_name) and
             OneForAll_IsObjectAButton(child)) then
+            tinsert(OneForAll_Scanned, child_name)
             OneForAll_SetupDragAndDropButton(child)
             if (not OneForAll_IsButtonExcluded(child_name)) then
                 OneForAll_IncludeButton(child)
@@ -382,8 +407,9 @@ end
 
 function OneForAll_Callbacks:LibDBIcon_IconCreated(button, name)
     local button_name = OneForAll_ButtonPrefix..name
-    if(not OneForAll_IsButtonIncluded(button_name) and
+    if(not OneForAll_IsButtonScanned(button_name) and
         not OneForAll_IsButtonIgnored(button_name)) then
+        tinsert(OneForAll_Scanned, button_name)
         OneForAll_SetupDragAndDropButton(button)
         if (not OneForAll_IsButtonExcluded(button_name)) then
             OneForAll_IncludeButton(button)
