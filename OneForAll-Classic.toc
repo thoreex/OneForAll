@@ -1,5 +1,5 @@
-## Interface: 11501
-## Version: 1.2.3
+## Interface: 11505
+## Version: 1.2.3.1
 ## Title: One For All
 ## Author: Thoreex
 ## SavedVariables: OneForAll_Database
