@@ -1,10 +1,11 @@
-## Interface: 110007
-## Version: 1.2.3.1
+## Interface: 110200, 11507, 30405
+## Version: 1.2.4
 ## Title: One For All
 ## Author: Thoreex
 ## SavedVariables: OneForAll_Database
 ## OptionalDeps: CallbackHandler-1.0, LibDataBroker-1.1, LibDBIcon-1.0, LibStub
 ## X-Curse-Project-ID: 818963
+## IconTexture: Interface\AddOns\OneForAll\OneForAll.png
 
 embeds.xml
 OneForAll.lua
