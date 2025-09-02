@@ -1,6 +1,6 @@
 OneForAll_Name = "OneForAll"
 OneForAll_FormalName = "One For All"
-OneForAll_Version = "v1.2.3.1"
+OneForAll_Version = "v1.2.4"
 OneForAll_ButtonPrefix = "LibDBIcon10_"
 OneForAll_Events = {}
 OneForAll_Callbacks = {}
@@ -77,6 +77,11 @@ function OneForAll_IncludeButton(button)
     button.HiddenSetPoint = button.SetPoint
     button.HiddenOnDragStart = button:GetScript("OnDragStart")
     button.HiddenOnDragStop = button:GetScript("OnDragStop")
+
+    -- Save minimap position
+    if (button.HiddenMinimapPos == nil) then
+        button.HiddenMinimapPos = OneForAll_GetMinimapPos(button)
+    end
 
     -- Save position
     if (button.HiddenPoint == nil and
@@ -157,6 +162,11 @@ function OneForAll_ExcludeButton(button)
     button:SetScript("OnDragStart", button.HiddenOnDragStart)
     button:SetScript("OnDragStop", button.HiddenOnDragStop)
 
+    -- Restore minimap position
+    if (button.HiddenMinimapPos ~= nil) then
+        OneForAll_SetMinimapPos(button, button.HiddenMinimapPos)
+    end
+
     -- Restore position
     button:ClearAllPoints()
     if (button.HiddenPoint ~= nil and
@@ -164,7 +174,11 @@ function OneForAll_ExcludeButton(button)
         button.HiddenRelativePoint ~= nil and
         button.HiddenOffsetX ~= nil and
         button.HiddenOffsetY ~= nil) then
-        button:SetPoint(button.HiddenPoint, button.HiddenRelativeTo, button.HiddenRelativePoint, button.HiddenOffsetX, button.HiddenOffsetY)
+        button:SetPoint(button.HiddenPoint,
+                        button.HiddenRelativeTo,
+                        button.HiddenRelativePoint,
+                        button.HiddenOffsetX,
+                        button.HiddenOffsetY)
     else
         local point, relativeTo, relativePoint, offsetX, offsetY = OneForAll_MinimapIcon:GetPoint()
         button:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY)
@@ -172,6 +186,7 @@ function OneForAll_ExcludeButton(button)
 
     -- Clear hidden functionality
     button.HiddenVisibility = nil
+    button.HiddenMinimapPos = nil
     button.HiddenPoint,
     button.HiddenRelativeTo,
     button.HiddenRelativePoint,
@@ -192,6 +207,10 @@ end
 
 function OneForAll_SetupDragAndDropButton(button)
     button:HookScript("OnDragStart", function(button)
+        -- Save minimap position
+        button.HiddenMinimapPos = OneForAll_GetMinimapPos(button)
+
+        -- Save position
         button.HiddenPoint,
         button.HiddenRelativeTo,
         button.HiddenRelativePoint,
@@ -200,6 +219,17 @@ function OneForAll_SetupDragAndDropButton(button)
     end)
     button:HookScript("OnDragStop", function(button)
         if OneForAll_IsCursorColliding(OneForAll_MinimapIcon) then
+            -- Restore minimap position
+            OneForAll_SetMinimapPos(button, button.HiddenMinimapPos)
+
+            -- Restore position
+            button:SetPoint(button.HiddenPoint,
+                            button.HiddenRelativeTo,
+                            button.HiddenRelativePoint,
+                            button.HiddenOffsetX,
+                            button.HiddenOffsetY)
+
+            -- Include button
             if (not OneForAll_IsShown) then
                 OneForAll_ToggleButtons()
             end
@@ -207,6 +237,20 @@ function OneForAll_SetupDragAndDropButton(button)
         end
         OneForAll_PositionButtons()
     end)
+end
+
+function OneForAll_GetMinimapPos(button)
+    return button.db and
+           button.db.minimapPos or
+           button.minimapPos
+end
+
+function OneForAll_SetMinimapPos(button, minimapPos)
+    if button.db then
+        button.db.minimapPos = minimapPos
+    else
+        button.minimapPos = minimapPos
+    end
 end
 
 function OneForAll_ToggleButtons()
@@ -322,6 +366,14 @@ function OneForAll_IsObjectAButton(object)
         object:GetScript("OnClick") ~= nil
 end
 
+function OneForAll_SetupButton(button, button_name)
+    tinsert(OneForAll_Scanned, button_name)
+    OneForAll_SetupDragAndDropButton(button)
+    if (not OneForAll_IsButtonExcluded(button_name)) then
+        OneForAll_IncludeButton(button)
+    end
+end
+
 function OneForAll_ScanLibraryButtons()
     local buttons = OneForAll_LibDBIcon:GetButtonList()
     for _, name in ipairs(buttons) do
@@ -329,11 +381,7 @@ function OneForAll_ScanLibraryButtons()
         local button_name = OneForAll_ButtonPrefix..name
         if(not OneForAll_IsButtonScanned(button_name) and
             not OneForAll_IsButtonIgnored(button_name)) then
-            tinsert(OneForAll_Scanned, button_name)
-            OneForAll_SetupDragAndDropButton(button)
-            if (not OneForAll_IsButtonExcluded(button_name)) then
-                OneForAll_IncludeButton(button)
-            end
+            OneForAll_SetupButton(button, button_name)
         end
     end
 end
@@ -345,11 +393,7 @@ function OneForAll_ScanNonLibraryButtons()
         if(not OneForAll_IsButtonScanned(child_name) and
             not OneForAll_IsButtonIgnored(child_name) and
             OneForAll_IsObjectAButton(child)) then
-            tinsert(OneForAll_Scanned, child_name)
-            OneForAll_SetupDragAndDropButton(child)
-            if (not OneForAll_IsButtonExcluded(child_name)) then
-                OneForAll_IncludeButton(child)
-            end
+            OneForAll_SetupButton(child, child_name)
         end
     end
 end
@@ -368,10 +412,6 @@ function OneForAll_SaveDatabase()
     OneForAll_Database["excludedButtons"] = OneForAll_Excluded
 end
 
-function OneForAll_AddMessage(message)
-    DEFAULT_CHAT_FRAME:AddMessage(message)
-end
-
 function OneForAll_Events:ADDON_LOADED(addonName)
     if (addonName == OneForAll_Name) then
         -- Database loading
@@ -381,7 +421,7 @@ function OneForAll_Events:ADDON_LOADED(addonName)
         local minimapIcon = OneForAll_LibDataBroker:NewDataObject(OneForAll_Name, {
             type = "data source",
             text = "One For All",
-            icon = "Interface\\HelpFrame\\ReportLagIcon-Loot",
+            icon = "Interface\\AddOns\\OneForAll\\OneForAll.png",
             OnClick = OneForAll_OnClick,
             OnTooltipShow = OneForAll_OnTooltipShow,
         })
@@ -391,9 +431,6 @@ function OneForAll_Events:ADDON_LOADED(addonName)
     
         -- Get icon registrated
         OneForAll_MinimapIcon = OneForAll_LibDBIcon:GetMinimapButton(OneForAll_Name)
-
-        -- Load end
-        OneForAll_AddMessage("|cffff0000"..OneForAll_FormalName.." "..OneForAll_Version.."|r loaded!")
     end
 end
 
@@ -409,11 +446,7 @@ function OneForAll_Callbacks:LibDBIcon_IconCreated(button, name)
     local button_name = OneForAll_ButtonPrefix..name
     if(not OneForAll_IsButtonScanned(button_name) and
         not OneForAll_IsButtonIgnored(button_name)) then
-        tinsert(OneForAll_Scanned, button_name)
-        OneForAll_SetupDragAndDropButton(button)
-        if (not OneForAll_IsButtonExcluded(button_name)) then
-            OneForAll_IncludeButton(button)
-        end
+        OneForAll_SetupButton(button, button_name)
     end
 end
 
