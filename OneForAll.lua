@@ -1,6 +1,6 @@
 OneForAll_Name = "OneForAll"
-OneForAll_FormalName = "One For All"
-OneForAll_Version = "v1.2.5"
+OneForAll_FormalName = C_AddOns.GetAddOnMetadata(OneForAll_Name, "Title")
+OneForAll_Version = C_AddOns.GetAddOnMetadata(OneForAll_Name, "Version")
 OneForAll_ButtonPrefix = "LibDBIcon10_"
 OneForAll_Events = {}
 OneForAll_Callbacks = {}
@@ -49,7 +49,7 @@ end
 
 function OneForAll_OnTooltipShow(tooltip)
     if not tooltip or not tooltip.AddLine then return end
-    tooltip:AddLine(OneForAll_FormalName.." "..OneForAll_Version)
+    tooltip:AddLine(OneForAll_FormalName.." v"..OneForAll_Version)
     tooltip:AddLine("|cFFffffffClick to show/hide icons|r")
     tooltip:AddLine("|cFFffffffDrag and drop here to include/exclude icons|r")
 end
