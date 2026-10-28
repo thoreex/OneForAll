@@ -1,5 +1,5 @@
-## Interface: 120001, 11508, 20505, 30405
-## Version: 1.2.6
+## Interface: 120105, 11509, 20506, 30405
+## Version: 1.2.7
 ## Title: One For All
 ## Author: Thoreex
 ## SavedVariables: OneForAll_Database
